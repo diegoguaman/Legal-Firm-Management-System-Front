@@ -1,0 +1,291 @@
+<div class="case-form-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>{{ isEditMode ? 'edit' : 'add' }}</mat-icon>
+        {{ isEditMode ? 'Editar Caso' : 'Nuevo Caso' }}
+      </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      @if (loading$ | async) {
+        <div class="loading-overlay">
+          <mat-spinner diameter="50"></mat-spinner>
+        </div>
+      }
+
+      <form [formGroup]="caseForm" (ngSubmit)="onSubmit()">
+        <mat-stepper #stepper linear>
+          <!-- Step 1: Case Basic Info -->
+          <mat-step [stepControl]="caseForm" label="Datos del Caso">
+            <div class="step-content">
+              <h3>Información Básica del Caso</h3>
+              
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Número de Caso</mat-label>
+                <input matInput formControlName="case_number" placeholder="2024-001">
+                @if (hasError(caseForm, 'case_number')) {
+                  <mat-error>
+                    {{ getErrorMessage(caseForm, 'case_number') }}
+                  </mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Cliente</mat-label>
+                <mat-select formControlName="client_id" [disabled]="!!clientId">
+                  @for (client of clients$ | async; track client.id) {
+                    <mat-option [value]="client.id">
+                      {{ client.first_name }} {{ client.last_name }}
+                    </mat-option>
+                  }
+                </mat-select>
+                @if (hasError(caseForm, 'client_id')) {
+                  <mat-error>
+                    {{ getErrorMessage(caseForm, 'client_id') }}
+                  </mat-error>
+                }
+              </mat-form-field>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Materia</mat-label>
+                  <mat-select formControlName="matter">
+                    @for (matter of matterOptions; track matter) {
+                      <mat-option [value]="matter">{{ matter }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Estado</mat-label>
+                  <mat-select formControlName="status">
+                    @for (status of statusOptions; track status) {
+                      <mat-option [value]="status">{{ status.replace('_', ' ') }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Notas</mat-label>
+                <textarea matInput formControlName="notes" rows="4" placeholder="Notas adicionales sobre el caso..."></textarea>
+              </mat-form-field>
+            </div>
+
+            <div class="step-actions">
+              <button mat-button type="button" (click)="onCancel()">Cancelar</button>
+              <button mat-raised-button color="primary" matStepperNext [disabled]="caseForm.invalid">
+                Siguiente
+                <mat-icon>arrow_forward</mat-icon>
+              </button>
+            </div>
+          </mat-step>
+
+          <!-- Step 2: Nationality Info (only if EXTRANJERIA) -->
+          @if (shouldShowNationalityStep()) {
+            <mat-step [stepControl]="nationalityForm" label="Datos de Nacionalidad">
+              <div class="step-content">
+                <h3>Información de Nacionalidad</h3>
+                
+                <div class="form-section">
+                  <h4>Padre</h4>
+                  <div class="form-row">
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>Nombre Completo</mat-label>
+                      <input matInput formControlName="father_fullname" placeholder="José González">
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>Nacionalidad</mat-label>
+                      <input matInput formControlName="father_nationality" placeholder="Colombiana">
+                    </mat-form-field>
+                  </div>
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Documento</mat-label>
+                    <input matInput formControlName="father_doc" placeholder="CC123456789">
+                  </mat-form-field>
+                </div>
+
+                <div class="form-section">
+                  <h4>Madre</h4>
+                  <div class="form-row">
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>Nombre Completo</mat-label>
+                      <input matInput formControlName="mother_fullname" placeholder="Carmen López">
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>Nacionalidad</mat-label>
+                      <input matInput formControlName="mother_nationality" placeholder="Colombiana">
+                    </mat-form-field>
+                  </div>
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Documento</mat-label>
+                    <input matInput formControlName="mother_doc" placeholder="CC987654321">
+                  </mat-form-field>
+                </div>
+
+                <div class="form-section">
+                  <h4>Residencia</h4>
+                  <div class="form-row">
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>Año de Inicio</mat-label>
+                      <input matInput type="number" formControlName="residence_start_year" placeholder="2018">
+                      @if (hasError(nationalityForm, 'residence_start_year')) {
+                        <mat-error>
+                          {{ getErrorMessage(nationalityForm, 'residence_start_year') }}
+                        </mat-error>
+                      }
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>Tipo de Residencia</mat-label>
+                      <mat-select formControlName="residence_type">
+                        @for (type of residenceTypeOptions; track type) {
+                          <mat-option [value]="type">{{ type }}</mat-option>
+                        }
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+                </div>
+              </div>
+
+              <div class="step-actions">
+                <button mat-button type="button" matStepperPrevious>
+                  <mat-icon>arrow_back</mat-icon>
+                  Anterior
+                </button>
+                <button mat-raised-button color="primary" matStepperNext>
+                  Siguiente
+                  <mat-icon>arrow_forward</mat-icon>
+                </button>
+              </div>
+            </mat-step>
+
+            <!-- Step 3: Exams -->
+            <mat-step [stepControl]="nationalityForm" label="Exámenes">
+              <div class="step-content">
+                <h3>Exámenes de Nacionalidad</h3>
+                
+                <div class="form-section">
+                  <h4>Examen DELE</h4>
+                  <div class="form-row">
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>Nivel</mat-label>
+                      <mat-select formControlName="exam_dele_level">
+                        <mat-option [value]="null">No presentado</mat-option>
+                        @for (level of deleLevelOptions; track level) {
+                          <mat-option [value]="level">{{ level }}</mat-option>
+                        }
+                      </mat-select>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>Fecha</mat-label>
+                      <input matInput [matDatepicker]="delePicker" formControlName="exam_dele_date">
+                      <mat-datepicker-toggle matIconSuffix [for]="delePicker"></mat-datepicker-toggle>
+                      <mat-datepicker #delePicker></mat-datepicker>
+                    </mat-form-field>
+                  </div>
+                </div>
+
+                <div class="form-section">
+                  <h4>Examen CCSE</h4>
+                  <div class="form-row">
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>Puntuación</mat-label>
+                      <input matInput type="number" formControlName="exam_ccse_score" placeholder="85">
+                      @if (hasError(nationalityForm, 'exam_ccse_score')) {
+                        <mat-error>
+                          {{ getErrorMessage(nationalityForm, 'exam_ccse_score') }}
+                        </mat-error>
+                      }
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>Fecha de Aprobación</mat-label>
+                      <input matInput [matDatepicker]="ccsePicker" formControlName="exam_ccse_passed_at">
+                      <mat-datepicker-toggle matIconSuffix [for]="ccsePicker"></mat-datepicker-toggle>
+                      <mat-datepicker #ccsePicker></mat-datepicker>
+                    </mat-form-field>
+                  </div>
+                </div>
+              </div>
+
+              <div class="step-actions">
+                <button mat-button type="button" matStepperPrevious>
+                  <mat-icon>arrow_back</mat-icon>
+                  Anterior
+                </button>
+                <button mat-raised-button color="primary" matStepperNext>
+                  Siguiente
+                  <mat-icon>arrow_forward</mat-icon>
+                </button>
+              </div>
+            </mat-step>
+
+            <!-- Step 4: Current Stage -->
+            <mat-step [stepControl]="nationalityForm" label="Estado Actual">
+              <div class="step-content">
+                <h3>Estado del Trámite</h3>
+                
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Etapa Actual</mat-label>
+                  <mat-select formControlName="current_stage">
+                    <mat-option [value]="null">No especificado</mat-option>
+                    @for (stage of stageOptions; track stage) {
+                      <mat-option [value]="stage">{{ stage?.replace('_', ' ') }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Fecha de Presentación</mat-label>
+                  <input matInput [matDatepicker]="submissionPicker" formControlName="submission_date">
+                  <mat-datepicker-toggle matIconSuffix [for]="submissionPicker"></mat-datepicker-toggle>
+                  <mat-datepicker #submissionPicker></mat-datepicker>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Oficina de Extranjería</mat-label>
+                  <input matInput formControlName="oficina_extranjeria" placeholder="Oficina de Extranjería de Barcelona">
+                </mat-form-field>
+              </div>
+
+              <div class="step-actions">
+                <button mat-button type="button" matStepperPrevious>
+                  <mat-icon>arrow_back</mat-icon>
+                  Anterior
+                </button>
+                <button mat-raised-button color="primary" type="submit" [disabled]="caseForm.invalid || (loading$ | async)">
+                  <mat-icon>{{ isEditMode ? 'save' : 'add' }}</mat-icon>
+                  {{ isEditMode ? 'Guardar Cambios' : 'Crear Caso' }}
+                </button>
+              </div>
+            </mat-step>
+          }
+
+          <!-- If not EXTRANJERIA, skip to final step -->
+          @if (!shouldShowNationalityStep()) {
+            <mat-step label="Finalizar">
+              <div class="step-content">
+                <h3>Resumen del Caso</h3>
+                <p>Materia: {{ caseForm.get('matter')?.value }}</p>
+                <p>Estado: {{ caseForm.get('status')?.value }}</p>
+                <p>Notas: {{ caseForm.get('notes')?.value || 'Sin notas' }}</p>
+              </div>
+
+              <div class="step-actions">
+                <button mat-button type="button" matStepperPrevious>
+                  <mat-icon>arrow_back</mat-icon>
+                  Anterior
+                </button>
+                <button mat-raised-button color="primary" type="submit" [disabled]="caseForm.invalid || (loading$ | async)">
+                  <mat-icon>{{ isEditMode ? 'save' : 'add' }}</mat-icon>
+                  {{ isEditMode ? 'Guardar Cambios' : 'Crear Caso' }}
+                </button>
+              </div>
+            </mat-step>
+          }
+        </mat-stepper>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>
+

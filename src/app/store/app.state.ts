@@ -3,6 +3,7 @@
  * Defines the shape of the entire application state
  */
 import { ClientsState } from './clients/clients.reducer';
+import { CasesState } from './cases/cases.reducer';
 
 /**
  * Root state interface
@@ -10,8 +11,8 @@ import { ClientsState } from './clients/clients.reducer';
  */
 export interface AppState {
   clients: ClientsState;
+  cases: CasesState;
   // Future features will be added here:
-  // cases: CasesState;
   // deadlines: DeadlinesState;
 }
 

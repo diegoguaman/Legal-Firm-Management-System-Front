@@ -14,6 +14,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormsModule } from '@angular/forms';
 import { Client } from '../../../models';
 import { AppState } from '../../../store/app.state';
@@ -37,6 +38,7 @@ import {
     MatFormFieldModule,
     MatCardModule,
     MatProgressSpinnerModule,
+    MatTooltipModule,
     FormsModule
   ],
   templateUrl: './client-list.component.html',

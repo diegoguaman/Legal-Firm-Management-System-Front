@@ -1,0 +1,182 @@
+<div class="case-detail-container">
+  @if (case$ | async; as caseItem) {
+    <div class="header-actions">
+      <button mat-button (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon>
+        Volver
+      </button>
+      <button mat-raised-button color="primary" (click)="editCase()">
+        <mat-icon>edit</mat-icon>
+        Editar
+      </button>
+    </div>
+
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>
+          Caso: {{ caseItem.case_number }}
+        </mat-card-title>
+        <mat-card-subtitle>
+          <mat-chip [class]="'badge-' + caseItem.matter.toLowerCase()">
+            {{ caseItem.matter }}
+          </mat-chip>
+          <mat-chip [class]="'badge-status-' + caseItem.status.toLowerCase().replace('_', '-')">
+            {{ caseItem.status.replace('_', ' ') }}
+          </mat-chip>
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <!-- Client Info -->
+        @if (client$ | async; as client) {
+          <div class="info-section">
+            <h3>Cliente</h3>
+            <p><strong>Nombre:</strong> {{ client.first_name }} {{ client.last_name }}</p>
+            <p><strong>DNI/NIE:</strong> {{ client.dni_nie }}</p>
+            <p><strong>Tipo:</strong> {{ client.client_type === 'FISICO' ? 'Físico' : 'Jurídico' }}</p>
+          </div>
+          <mat-divider></mat-divider>
+        }
+
+        <!-- Case Info -->
+        <div class="info-section">
+          <h3>Información del Caso</h3>
+          <div class="info-grid">
+            <div class="info-item">
+              <strong>Número de Caso:</strong>
+              <span>{{ caseItem.case_number }}</span>
+            </div>
+            <div class="info-item">
+              <strong>Materia:</strong>
+              <span>{{ caseItem.matter }}</span>
+            </div>
+            <div class="info-item">
+              <strong>Estado:</strong>
+              <span>{{ caseItem.status.replace('_', ' ') }}</span>
+            </div>
+            <div class="info-item">
+              <strong>Fecha de Apertura:</strong>
+              <span>{{ caseItem.opened_at | date:'short' }}</span>
+            </div>
+            @if (caseItem.closed_at) {
+              <div class="info-item">
+                <strong>Fecha de Cierre:</strong>
+                <span>{{ caseItem.closed_at | date:'short' }}</span>
+              </div>
+            }
+          </div>
+          @if (caseItem.notes) {
+            <div class="notes-section">
+              <strong>Notas:</strong>
+              <p>{{ caseItem.notes }}</p>
+            </div>
+          }
+        </div>
+
+        <!-- Nationality Info (only for EXTRANJERIA) -->
+        @if (isExtranjeria(caseItem) && (nationality$ | async); as nationality) {
+          <mat-divider></mat-divider>
+          <div class="info-section">
+            <h3>Datos de Nacionalidad</h3>
+            
+            @if (nationality.father_fullname || nationality.mother_fullname) {
+              <div class="info-subsection">
+                <h4>Padres</h4>
+                @if (nationality.father_fullname) {
+                  <div class="info-item">
+                    <strong>Padre:</strong>
+                    <span>{{ nationality.father_fullname }}</span>
+                    @if (nationality.father_nationality) {
+                      <span> ({{ nationality.father_nationality }})</span>
+                    }
+                  </div>
+                }
+                @if (nationality.mother_fullname) {
+                  <div class="info-item">
+                    <strong>Madre:</strong>
+                    <span>{{ nationality.mother_fullname }}</span>
+                    @if (nationality.mother_nationality) {
+                      <span> ({{ nationality.mother_nationality }})</span>
+                    }
+                  </div>
+                }
+              </div>
+            }
+
+            @if (nationality.residence_start_year || nationality.residence_type) {
+              <div class="info-subsection">
+                <h4>Residencia</h4>
+                @if (nationality.residence_start_year) {
+                  <div class="info-item">
+                    <strong>Año de Inicio:</strong>
+                    <span>{{ nationality.residence_start_year }}</span>
+                  </div>
+                }
+                @if (nationality.residence_type) {
+                  <div class="info-item">
+                    <strong>Tipo:</strong>
+                    <span>{{ nationality.residence_type }}</span>
+                  </div>
+                }
+              </div>
+            }
+
+            @if (nationality.exam_dele_level || nationality.exam_ccse_score) {
+              <div class="info-subsection">
+                <h4>Exámenes</h4>
+                @if (nationality.exam_dele_level) {
+                  <div class="info-item">
+                    <strong>DELE Nivel:</strong>
+                    <span>{{ nationality.exam_dele_level }}</span>
+                    @if (nationality.exam_dele_date) {
+                      <span> ({{ nationality.exam_dele_date | date:'short' }})</span>
+                    }
+                  </div>
+                }
+                @if (nationality.exam_ccse_score !== null && nationality.exam_ccse_score !== undefined) {
+                  <div class="info-item">
+                    <strong>CCSE Puntuación:</strong>
+                    <span>{{ nationality.exam_ccse_score }}</span>
+                    @if (nationality.exam_ccse_passed_at) {
+                      <span> ({{ nationality.exam_ccse_passed_at | date:'short' }})</span>
+                    }
+                  </div>
+                }
+              </div>
+            }
+
+            @if (nationality.current_stage || nationality.submission_date) {
+              <div class="info-subsection">
+                <h4>Estado del Trámite</h4>
+                @if (nationality.current_stage) {
+                  <div class="info-item">
+                    <strong>Etapa Actual:</strong>
+                    <span>{{ nationality.current_stage.replace('_', ' ') }}</span>
+                  </div>
+                }
+                @if (nationality.submission_date) {
+                  <div class="info-item">
+                    <strong>Fecha de Presentación:</strong>
+                    <span>{{ nationality.submission_date | date:'short' }}</span>
+                  </div>
+                }
+                @if (nationality.oficina_extranjeria) {
+                  <div class="info-item">
+                    <strong>Oficina:</strong>
+                    <span>{{ nationality.oficina_extranjeria }}</span>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+  } @else {
+    <div class="loading-container">
+      <mat-spinner></mat-spinner>
+      <p>Cargando caso...</p>
+    </div>
+  }
+</div>
+

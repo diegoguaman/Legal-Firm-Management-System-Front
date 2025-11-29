@@ -7,6 +7,8 @@ import { provideStoreDevtools } from '@ngrx/store-devtools';
 import { routes } from './app.routes';
 import { clientsReducer } from './store/clients/clients.reducer';
 import { ClientsEffects } from './store/clients/clients.effects';
+import { casesReducer } from './store/cases/cases.reducer';
+import { CasesEffects } from './store/cases/cases.effects';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -15,13 +17,13 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     // NgRx Store configuration
     provideStore({
-      clients: clientsReducer
+      clients: clientsReducer,
+      cases: casesReducer
       // Future features will be added here:
-      // cases: casesReducer,
       // deadlines: deadlinesReducer
     }),
     // NgRx Effects configuration
-    provideEffects([ClientsEffects]),
+    provideEffects([ClientsEffects, CasesEffects]),
     // Store DevTools (only in development)
     provideStoreDevtools({
       maxAge: 25, // Retains last 25 states
